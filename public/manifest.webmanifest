@@ -1,0 +1,8 @@
+{
+  "name": "Web HDMI",
+  "short_name": "Web HDMI",
+  "start_url": "https://webhdmi.minamo.io/",
+  "display": "standalone",
+  "background_color": "#000",
+  "description": "HDMI to WebCam Web Front-End"
+}
