@@ -44,5 +44,30 @@ async function main() {
   loadCamera();
 }
 
+function attachEvents() {
+  const menu = document.querySelector('#menu');
+  const volume = document.querySelector('#volume');
+  const video = document.querySelector('video');
+
+  // Syncronize volume
+  volume.value = localStorage.getItem('volume') || 100;
+  video.volume = volume.value / 100;
+  volume.addEventListener('input', (e) => {
+    video.volume = e.target.value / 100;
+    localStorage.setItem('volume', e.target.value);
+  });
+
+  // Hide menu
+  let hidingTimer = 0;
+  document.addEventListener('mousemove', () => {
+    menu.classList.remove('hide');
+    clearTimeout(hidingTimer);
+    hidingTimer = setTimeout(() => {
+      menu.classList.add('hide');
+    }, 3000);
+  })
+}
+
 main();
+attachEvents();
 navigator.serviceWorker.register('/sw.js');
