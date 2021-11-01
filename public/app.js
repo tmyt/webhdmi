@@ -1,7 +1,7 @@
 async function requestCamera() {
   await navigator
     .mediaDevices
-    .getUserMedia({ video: true, audio: true })
+    .getUserMedia({ video: true, audio: true });
 }
 
 async function findCamera() {
@@ -72,7 +72,7 @@ function attachEvents() {
     clearTimeout(hidingTimer);
     hidingTimer = setTimeout(() => {
       menu.classList.add('hide');
-    }, 3000);
+    }, 1500);
   })
 }
 
