@@ -4,7 +4,7 @@ async function requestCamera() {
     .getUserMedia({ video: true, audio: true })
 }
 
-async function loadCamera() {
+async function findCamera() {
   const devices = await navigator
     .mediaDevices
     .enumerateDevices();
@@ -13,7 +13,11 @@ async function loadCamera() {
   const compositeDevices = devices.filter(device => device.groupId === compositeDevice.groupId);
   const audioDevice = compositeDevices.find(device => device.kind === "audioinput");
   const videoDevice = compositeDevices.find(device => device.kind === "videoinput");
-  const stream = await navigator
+  return [audioDevice, videoDevice];
+}
+
+async function openCamera([audioDevice, videoDevice]) {
+  return await navigator
     .mediaDevices
     .getUserMedia({
       audio: {
@@ -25,9 +29,13 @@ async function loadCamera() {
         height: 1080
       }
     });
+}
+
+async function loadCamera() {
+  const device = await findCamera();
+  const stream = await openCamera(device);
   const video = document.querySelector('video');
   video.srcObject = stream;
-  video.play();
 }
 
 async function main() {
