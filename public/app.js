@@ -87,6 +87,16 @@ function attachEvents() {
     loadCamera();
   });
 
+  // Enter fullscreen
+  const fullscreen = document.querySelector('#fullscreen');
+  fullscreen.addEventListener('click', () => {
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
+    } else {
+      document.documentElement.requestFullscreen();
+    }
+  });
+
   // Hide menu
   let hidingTimer = 0;
   document.addEventListener('mousemove', () => {
