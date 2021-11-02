@@ -26,8 +26,10 @@ div#menu {
   background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
+  justify-content: space-between;
   z-index: 1;
   padding: 0 12px;
+  box-sizing: border-box;
 }
 
 div#menu {

@@ -4,18 +4,6 @@ async function requestCamera() {
     .getUserMedia({ video: true, audio: true });
 }
 
-async function findCamera() {
-  const devices = await navigator
-    .mediaDevices
-    .enumerateDevices();
-  const compositeDevice = devices
-    .find(device => device.label.includes("USB3.0 HD VIDEO"));
-  const compositeDevices = devices.filter(device => device.groupId === compositeDevice.groupId);
-  const audioDevice = compositeDevices.find(device => device.kind === "audioinput");
-  const videoDevice = compositeDevices.find(device => device.kind === "videoinput");
-  return [audioDevice, videoDevice];
-}
-
 async function openCamera([audioDevice, videoDevice]) {
   return await navigator
     .mediaDevices
@@ -31,9 +19,28 @@ async function openCamera([audioDevice, videoDevice]) {
     });
 }
 
+async function updateSelections() {
+  const devices = await navigator.mediaDevices.enumerateDevices();
+  const videoSelect = document.querySelector('#videoinput');
+  const audioSelect = document.querySelector('#audioinput');
+  const videoDevices = devices.filter(device => device.kind === 'videoinput');
+  const audioDevices = devices.filter(device => device.kind === 'audioinput');
+  videoSelect.innerHTML = '';
+  audioSelect.innerHTML = '';
+  videoDevices.forEach(device => {
+    videoSelect.appendChild(new Option(device.label, device.deviceId));
+  });
+  audioDevices.forEach(device => {
+    audioSelect.appendChild(new Option(device.label, device.deviceId));
+  });
+  videoSelect.value = localStorage.getItem('videoinput') || videoDevices[0].deviceId;
+  audioSelect.value = localStorage.getItem('audioinput') || audioDevices[0].deviceId;
+}
+
 async function loadCamera() {
-  const device = await findCamera();
-  const stream = await openCamera(device);
+  const audioDevice = document.querySelector('#audioinput').value;
+  const videoDevice = document.querySelector('#videoinput').value;
+  const stream = await openCamera([audioDevice, videoDevice]);
   const video = document.querySelector('video');
   video.srcObject = stream;
 }
@@ -49,6 +56,7 @@ async function main() {
   if (videoPermission.state !== 'granted' || audioPermission.state !== 'granted') {
     await requestCamera();
   }
+  updateSelections();
   loadCamera();
 }
 
@@ -65,6 +73,20 @@ function attachEvents() {
     localStorage.setItem('volume', e.target.value);
   });
 
+  // Syncronize video input
+  const videoSelect = document.querySelector('#videoinput');
+  videoSelect.addEventListener('change', (e) => {
+    localStorage.setItem('videoinput', e.target.value);
+    loadCamera();
+  });
+
+  // Syncronize audio input
+  const audioSelect = document.querySelector('#audioinput');
+  audioSelect.addEventListener('change', (e) => {
+    localStorage.setItem('audioinput', e.target.value);
+    loadCamera();
+  });
+
   // Hide menu
   let hidingTimer = 0;
   document.addEventListener('mousemove', () => {
@@ -73,7 +95,7 @@ function attachEvents() {
     hidingTimer = setTimeout(() => {
       menu.classList.add('hide');
     }, 1500);
-  })
+  });
 }
 
 main();
