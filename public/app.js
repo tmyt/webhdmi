@@ -88,6 +88,19 @@ function attachEvents() {
     loadCamera();
   });
 
+  // Capture to clipboard
+  const capture = document.querySelector('#capture');
+  capture.addEventListener('click', (e) => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 1920;
+    canvas.height = 1080;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    canvas.toBlob(blob => {
+      navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+    }, 'image/png');
+  });
+
   // Enter fullscreen
   const fullscreen = document.querySelector('#fullscreen');
   fullscreen.addEventListener('click', () => {
