@@ -58,7 +58,7 @@ async function main() {
     await requestCamera();
   }
   updateSelections();
-  loadCamera();
+  requestAnimationFrame(() => loadCamera());
 }
 
 function attachEvents() {
@@ -90,7 +90,7 @@ function attachEvents() {
 
   // Capture to clipboard
   const capture = document.querySelector('#capture');
-  capture.addEventListener('click', (e) => {
+  capture.addEventListener('click', () => {
     const canvas = document.createElement('canvas');
     canvas.width = 1920;
     canvas.height = 1080;
