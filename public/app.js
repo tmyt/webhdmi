@@ -28,10 +28,12 @@ async function createQuirks(audioStream) {
   return audioDestination.stream.getAudioTracks()[0];
 }
 
-async function openCamera([audioDeviceId, videoDeviceId]) {
-  if (!audioDeviceId || !videoDeviceId) return;
-  const videoSource = await navigator.mediaDevices.getUserMedia({
-    audio: false,
+async function openCamera(videoDeviceId) {
+  if (!videoDeviceId) return;
+  const audioVideoSource = await navigator.mediaDevices.getUserMedia({
+    audio: {
+      sampleRate: 96000,
+    },
     video: {
       deviceId: videoDeviceId,
       width: 1920,
@@ -39,44 +41,27 @@ async function openCamera([audioDeviceId, videoDeviceId]) {
       frameRate: 60,
     },
   });
-  const audioSource = await navigator.mediaDevices.getUserMedia({
-    audio: {
-      deviceId: audioDeviceId,
-      sampleRate: 96000,
-    },
-    video: false,
-  });
-  videoSource.addTrack(await createQuirks(audioSource));
-  return videoSource;
+  return new MediaStream([
+    audioVideoSource.getVideoTracks()[0],
+    await createQuirks(audioVideoSource),
+  ]);
 }
 
 async function updateSelections() {
   const devices = await navigator.mediaDevices.enumerateDevices();
   const videoSelect = document.querySelector("#videoinput");
-  const audioSelect = document.querySelector("#audioinput");
   const videoDevices = devices.filter((device) => device.kind === "videoinput");
-  const audioDevices = devices.filter((device) => device.kind === "audioinput");
   videoSelect.innerHTML = "";
-  audioSelect.innerHTML = "";
   videoDevices.forEach((device) => {
     videoSelect.appendChild(new Option(device.label, device.deviceId));
   });
-  audioDevices.forEach((device) => {
-    audioSelect.appendChild(new Option(device.label, device.deviceId));
-  });
   videoSelect.value =
     localStorage.getItem("videoinput") || videoDevices[0].deviceId;
-  audioSelect.value =
-    localStorage.getItem("audioinput") || audioDevices[0].deviceId;
 }
 
-async function loadCamera(argAudioDeviceId, argVideoDeviceId) {
-  const audioDeviceId = document.querySelector("#audioinput").value;
+async function loadCamera(argVideoDeviceId) {
   const videoDeviceId = document.querySelector("#videoinput").value;
-  const stream = await openCamera([
-    argAudioDeviceId || audioDeviceId,
-    argVideoDeviceId || videoDeviceId,
-  ]);
+  const stream = await openCamera(argVideoDeviceId || videoDeviceId);
   const video = document.querySelector("video");
   video.srcObject = stream;
 }
@@ -94,10 +79,7 @@ async function main() {
     await requestCamera();
   }
   updateSelections();
-  loadCamera(
-    localStorage.getItem("audioinput"),
-    localStorage.getItem("videoinput")
-  );
+  loadCamera(localStorage.getItem("videoinput"));
 }
 
 function captureScreen() {
@@ -129,13 +111,6 @@ function attachEvents() {
   const videoSelect = document.querySelector("#videoinput");
   videoSelect.addEventListener("change", (e) => {
     localStorage.setItem("videoinput", e.target.value);
-    loadCamera();
-  });
-
-  // Syncronize audio input
-  const audioSelect = document.querySelector("#audioinput");
-  audioSelect.addEventListener("change", (e) => {
-    localStorage.setItem("audioinput", e.target.value);
     loadCamera();
   });
 
