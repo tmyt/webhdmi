@@ -1,5 +1,3 @@
-let i = 0;
-
 class Ms2109Quirks extends AudioWorkletProcessor {
   process(inputs, outputs, parameters) {
     const input = inputs[0];
