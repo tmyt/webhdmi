@@ -1,5 +1,6 @@
 async function requestCamera() {
-  await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+  const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+  stream.getTracks().forEach(track => track.stop())
 }
 
 async function createQuirks(audioStream) {
@@ -94,6 +95,30 @@ function captureScreen() {
   }, "image/png");
 }
 
+function updateVolumeIcon(volume) {
+  console.log(volume);
+  const volumeIcon = document.querySelector("#volume-icon");
+  if (volume === 0) {
+    if (!volumeIcon.classList.contains("ri-volume-mute-fill")) {
+      volumeIcon.classList.add("ri-volume-mute-fill");
+      volumeIcon.classList.remove("ri-volume-down-fill");
+      volumeIcon.classList.remove("ri-volume-up-fill");
+    }
+  } else if (volume < 0.5) {
+    if (!volumeIcon.classList.contains("ri-volume-down-fill")) {
+      volumeIcon.classList.add("ri-volume-down-fill");
+      volumeIcon.classList.remove("ri-volume-mute-fill");
+      volumeIcon.classList.remove("ri-volume-up-fill");
+    }
+  } else {
+    if (!volumeIcon.classList.contains("ri-volume-up-fill")) {
+      volumeIcon.classList.add("ri-volume-up-fill");
+      volumeIcon.classList.remove("ri-volume-mute-fill");
+      volumeIcon.classList.remove("ri-volume-down-fill");
+    }
+  }
+}
+
 function attachEvents() {
   const menu = document.querySelector("#menu");
   const volume = document.querySelector("#volume");
@@ -102,9 +127,11 @@ function attachEvents() {
   // Syncronize volume
   volume.value = localStorage.getItem("volume") || 100;
   video.volume = volume.value / 100;
+  updateVolumeIcon(volume.value);
   volume.addEventListener("input", (e) => {
     video.volume = e.target.value / 100;
     localStorage.setItem("volume", e.target.value);
+    updateVolumeIcon(video.volume);
   });
 
   // Syncronize video input
@@ -144,6 +171,18 @@ function attachEvents() {
   document.addEventListener("keydown", (e) => {
     if (e.code === "KeyC" && e.altKey) {
       captureScreen();
+    }
+  });
+
+  // Fullscreen
+  document.addEventListener("fullscreenchange", () => {
+    const fullscreenIcon = document.querySelector("#fullscreen-icon");
+    if (document.fullscreenElement) {
+      fullscreenIcon.classList.remove("ri-fullscreen-fill");
+      fullscreenIcon.classList.add("ri-fullscreen-exit-fill");
+    } else {
+      fullscreenIcon.classList.remove("ri-fullscreen-exit-fill");
+      fullscreenIcon.classList.add("ri-fullscreen-fill");
     }
   });
 }
