@@ -1,3 +1,8 @@
+const audioContext = new AudioContext({
+  sampleRate: 96000,
+  latencyHint: "interactive",
+});
+
 async function requestCamera() {
   const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
   stream.getTracks().forEach(track => track.stop())
@@ -16,11 +21,6 @@ async function createQuirks(audioStream) {
   }
   // Install quirks
   console.log("Creating quirks for MS2109...");
-  const audioContext = new AudioContext({
-    sampleRate: 96000,
-    latencyHint: "interactive",
-  });
-  await audioContext.audioWorklet.addModule("ms2109-quirks.js");
   const quirksNode = new AudioWorkletNode(audioContext, "ms2109-quirks");
   const audioSource = audioContext.createMediaStreamSource(audioStream);
   const audioDestination = audioContext.createMediaStreamDestination();
@@ -73,6 +73,9 @@ async function queryPermission(name) {
 }
 
 async function main() {
+  // Initialize audio context
+  await audioContext.audioWorklet.addModule("ms2109-quirks.js");
+
   const videoPermission = await queryPermission("camera");
   const audioPermission = await queryPermission("microphone");
 
