@@ -96,7 +96,6 @@ function captureScreen() {
 }
 
 function updateVolumeIcon(volume) {
-  console.log(volume);
   const volumeIcon = document.querySelector("#volume-icon");
   if (volume === 0) {
     if (!volumeIcon.classList.contains("ri-volume-mute-fill")) {
@@ -127,7 +126,7 @@ function attachEvents() {
   // Syncronize volume
   volume.value = localStorage.getItem("volume") || 100;
   video.volume = volume.value / 100;
-  updateVolumeIcon(volume.value);
+  updateVolumeIcon(video.volume);
   volume.addEventListener("input", (e) => {
     video.volume = e.target.value / 100;
     localStorage.setItem("volume", e.target.value);
