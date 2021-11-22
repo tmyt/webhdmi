@@ -100,6 +100,8 @@ function captureScreen() {
   canvas.toBlob((blob) => {
     navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
   }, "image/png");
+  var toastEl = document.querySelector('.toast');
+  (new bootstrap.Toast(toastEl, { delay: 1500 })).show();
 }
 
 function updateVolumeIcon(volume) {
