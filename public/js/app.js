@@ -78,7 +78,7 @@ async function queryPermission(name) {
 
 async function main() {
   // Initialize audio context
-  await audioContext.audioWorklet.addModule("ms2109-quirks.js");
+  await audioContext.audioWorklet.addModule("/js/ms2109-quirks.js");
 
   const videoPermission = await queryPermission("camera");
   const audioPermission = await queryPermission("microphone");
@@ -195,4 +195,4 @@ function attachEvents() {
 
 main();
 attachEvents();
-navigator.serviceWorker.register("/sw.js");
+navigator.serviceWorker.register("/js/sw.js");
