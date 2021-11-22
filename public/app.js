@@ -30,9 +30,13 @@ async function createQuirks(audioStream) {
 }
 
 async function openCamera(videoDeviceId) {
-  if (!videoDeviceId) return;
+  const devices = await navigator.mediaDevices.enumerateDevices();
+  const videoDevice = devices.filter(device => device.deviceId === videoDeviceId)[0];
+  if (!videoDevice) return;
+  const auidoDevice = devices.filter(device => device.kind === "audioinput" && device.groupId === videoDevice.groupId)[0];
   const audioVideoSource = await navigator.mediaDevices.getUserMedia({
     audio: {
+      deviceId: auidoDevice.deviceId,
       sampleRate: 96000,
     },
     video: {
