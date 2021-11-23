@@ -197,4 +197,4 @@ function attachEvents() {
 
 main();
 attachEvents();
-navigator.serviceWorker.register("/js/sw.js");
+navigator.serviceWorker.register("/sw.js");

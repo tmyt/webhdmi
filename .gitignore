@@ -1,2 +1,5 @@
 node_modules
-
+public/sw.js
+public/bootstrap
+public/remixicon
+wasm/out
