@@ -27,7 +27,7 @@ class Ms2109Quirks extends AudioWorkletProcessor {
   process([input], [output], parameters) {
     const inputChannel = input[0];
     Module.HEAPF32.set(inputChannel, this.inPtrIndex);
-    Module._process(this.inPtr, this.outPtr, CHUNK_LENGTH);
+    Module._process(this.inPtr, this.outPtr);
     output[0].set(Module.HEAPF32.subarray(this.outLeftIndex, this.outLeftLength));
     output[1].set(Module.HEAPF32.subarray(this.outRightIndex, this.outRightLength));
     return true
