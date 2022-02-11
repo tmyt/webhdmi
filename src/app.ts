@@ -1,3 +1,7 @@
+declare const bootstrap: {
+  Toast: any;
+};
+
 const audioContext = new AudioContext({
   sampleRate: 96000,
   latencyHint: "interactive",
@@ -8,12 +12,14 @@ async function requestCamera() {
   stream.getTracks().forEach(track => track.stop())
 }
 
-async function createQuirks(audioStream) {
+async function createQuirks(audioStream: MediaStream) {
   // Check Source audio requires quirks
   const sourceAudioTrack = audioStream.getAudioTracks()[0];
+  if (!sourceAudioTrack) return null;
   const sourceSettings = sourceAudioTrack.getSettings();
   if (
     sourceSettings.sampleRate !== 96000 ||
+    // @ts-ignore - このプロパティは存在してる
     sourceSettings.channelCount !== 1
   ) {
     console.log("No quirks required!");
@@ -29,16 +35,16 @@ async function createQuirks(audioStream) {
   return audioDestination.stream.getAudioTracks()[0];
 }
 
-async function openCamera(videoDeviceId) {
+async function openCamera(videoDeviceId: string) {
   const devices = await navigator.mediaDevices.enumerateDevices();
   const videoDevice = devices.filter(device => device.deviceId === videoDeviceId)[0];
-  if (!videoDevice) return;
+  if (!videoDevice) return null;
   const auidoDevice = devices.filter(device => device.kind === "audioinput" && device.groupId === videoDevice.groupId)[0];
   const audioVideoSource = await navigator.mediaDevices.getUserMedia({
-    audio: {
+    audio: auidoDevice ? {
       deviceId: auidoDevice.deviceId,
       sampleRate: 96000,
-    },
+    } : false,
     video: {
       deviceId: videoDeviceId,
       width: 1920,
@@ -49,12 +55,12 @@ async function openCamera(videoDeviceId) {
   return new MediaStream([
     audioVideoSource.getVideoTracks()[0],
     await createQuirks(audioVideoSource),
-  ]);
+  ].filter(a => a) as MediaStreamTrack[]);
 }
 
 async function updateSelections() {
   const devices = await navigator.mediaDevices.enumerateDevices();
-  const videoSelect = document.querySelector("#videoinput");
+  const videoSelect = document.querySelector<HTMLSelectElement>("#videoinput")!;
   const videoDevices = devices.filter((device) => device.kind === "videoinput");
   videoSelect.innerHTML = "";
   videoDevices.forEach((device) => {
@@ -64,15 +70,16 @@ async function updateSelections() {
     localStorage.getItem("videoinput") || videoDevices[0].deviceId;
 }
 
-async function loadCamera(argVideoDeviceId) {
-  const videoDeviceId = document.querySelector("#videoinput").value;
+async function loadCamera(argVideoDeviceId?: string | null) {
+  if (!argVideoDeviceId) return;
+  const videoDeviceId = document.querySelector<HTMLSelectElement>("#videoinput")!.value;
   const stream = await openCamera(argVideoDeviceId || videoDeviceId);
-  const video = document.querySelector("video");
+  const video = document.querySelector<HTMLVideoElement>("video")!;
   video.srcObject = stream;
 }
 
-async function queryPermission(name) {
-  const permission = await navigator.permissions.query({ name });
+async function queryPermission(name: string) {
+  const permission = await navigator.permissions.query({ name: name as PermissionName });
   return permission.state === "granted";
 }
 
@@ -90,22 +97,38 @@ async function main() {
   loadCamera(localStorage.getItem("videoinput"));
 }
 
-function captureScreen() {
-  const video = document.querySelector("video");
+function getCapture() {
+  const video = document.querySelector<HTMLVideoElement>("video")!;
   const canvas = document.createElement("canvas");
   canvas.width = 1920;
   canvas.height = 1080;
-  const ctx = canvas.getContext("2d");
+  const ctx = canvas.getContext("2d")!;
   ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-  canvas.toBlob((blob) => {
-    navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
-  }, "image/png");
+  return new Promise<Blob | null>(resolve => canvas.toBlob(resolve, "image/png"));
+}
+
+async function captureScreen() {
+  const blob = await getCapture();
+  if (!blob) return;
+  navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
   var toastEl = document.querySelector('.toast');
   (new bootstrap.Toast(toastEl, { delay: 1500 })).show();
 }
 
-function updateVolumeIcon(volume) {
-  const volumeIcon = document.querySelector("#volume-icon");
+async function saveScreen() {
+  const blob = await getCapture();
+  if (!blob) return;
+  const file = new File([blob], `webhdmi_${Date.now()}.png`, { type: "image/png" });
+  const url = URL.createObjectURL(file);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = file.name;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function updateVolumeIcon(volume: number) {
+  const volumeIcon = document.querySelector<HTMLElement>("#volume-icon")!;
   if (volume === 0) {
     if (!volumeIcon.classList.contains("ri-volume-mute-fill")) {
       volumeIcon.classList.add("ri-volume-mute-fill");
@@ -128,35 +151,37 @@ function updateVolumeIcon(volume) {
 }
 
 function attachEvents() {
-  const menu = document.querySelector("#menu");
-  const volume = document.querySelector("#volume");
-  const video = document.querySelector("video");
+  const menu = document.querySelector<HTMLSelectElement>("#menu")!;
+  const volume = document.querySelector<HTMLInputElement>("#volume")!;
+  const video = document.querySelector<HTMLVideoElement>("video")!;
 
   // Syncronize volume
-  volume.value = localStorage.getItem("volume") || 100;
-  video.volume = volume.value / 100;
+  volume.value = localStorage.getItem("volume") || "100";
+  video.volume = volume.valueAsNumber / 100;
   updateVolumeIcon(video.volume);
   volume.addEventListener("input", (e) => {
-    video.volume = e.target.value / 100;
-    localStorage.setItem("volume", e.target.value);
+    const target = e.target as HTMLInputElement;
+    video.volume = target.valueAsNumber / 100;
+    localStorage.setItem("volume", target.value);
     updateVolumeIcon(video.volume);
   });
 
   // Syncronize video input
-  const videoSelect = document.querySelector("#videoinput");
+  const videoSelect = document.querySelector<HTMLSelectElement>("#videoinput")!;
   videoSelect.addEventListener("change", (e) => {
-    localStorage.setItem("videoinput", e.target.value);
+    const target = e.target as HTMLSelectElement;
+    localStorage.setItem("videoinput", target.value);
     loadCamera();
   });
 
   // Capture to clipboard
-  const capture = document.querySelector("#capture");
+  const capture = document.querySelector<HTMLButtonElement>("#capture")!;
   capture.addEventListener("click", () => {
     captureScreen();
   });
 
   // Enter fullscreen
-  const fullscreen = document.querySelector("#fullscreen");
+  const fullscreen = document.querySelector<HTMLButtonElement>("#fullscreen")!;
   fullscreen.addEventListener("click", () => {
     if (document.fullscreenElement) {
       document.exitFullscreen();
@@ -181,10 +206,15 @@ function attachEvents() {
       captureScreen();
     }
   });
+  document.addEventListener("keydown", (e) => {
+    if (e.code === "KeyS" && e.altKey && e.shiftKey) {
+      saveScreen();
+    }
+  });
 
   // Fullscreen
   document.addEventListener("fullscreenchange", () => {
-    const fullscreenIcon = document.querySelector("#fullscreen-icon");
+    const fullscreenIcon = document.querySelector<HTMLButtonElement>("#fullscreen-icon")!;
     if (document.fullscreenElement) {
       fullscreenIcon.classList.remove("ri-fullscreen-fill");
       fullscreenIcon.classList.add("ri-fullscreen-exit-fill");

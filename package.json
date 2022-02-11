@@ -13,6 +13,7 @@
   "dependencies": {
     "bootstrap": "^5.1.3",
     "express": "^4.17.1",
-    "remixicon": "^2.5.0"
+    "remixicon": "^2.5.0",
+    "typescript": "^4.5.5"
   }
 }
