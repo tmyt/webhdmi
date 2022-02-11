@@ -71,7 +71,6 @@ async function updateSelections() {
 }
 
 async function loadCamera(argVideoDeviceId?: string | null) {
-  if (!argVideoDeviceId) return;
   const videoDeviceId = document.querySelector<HTMLSelectElement>("#videoinput")!.value;
   const stream = await openCamera(argVideoDeviceId || videoDeviceId);
   const video = document.querySelector<HTMLVideoElement>("video")!;
