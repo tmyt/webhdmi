@@ -1,4 +1,5 @@
 node_modules
+public/js/app.js
 public/sw.js
 public/bootstrap
 public/remixicon
