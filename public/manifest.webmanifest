@@ -1,13 +1,13 @@
 {
   "name": "Web HDMI",
   "short_name": "Web HDMI",
-  "start_url": "https://webhdmi.minamo.io/",
+  "start_url": "https://hdmi.onsen.tech/",
   "display": "standalone",
   "background_color": "#000",
   "description": "HDMI to WebCam Web Front-End",
   "icons": [
     {
-      "src": "https://webhdmi.minamo.io/icon.png",
+      "src": "https://hdmi.onsen.tech/icon.png",
       "sizes": "512x512",
       "type": "image/png"
     }
