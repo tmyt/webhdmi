@@ -42,3 +42,7 @@ div#menu.hide {
   opacity: 0;
   pointer-events: none;
 }
+
+i#volume-icon {
+  cursor: pointer;
+}

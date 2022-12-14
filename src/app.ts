@@ -2,11 +2,6 @@ declare const bootstrap: {
   Toast: any;
 };
 
-const audioContext = new AudioContext({
-  sampleRate: 96000,
-  latencyHint: "interactive",
-});
-
 async function requestCamera() {
   const stream = await navigator.mediaDevices.getUserMedia({
     video: true,
@@ -28,6 +23,13 @@ async function createQuirks(audioStream: MediaStream) {
     console.log("No quirks required!");
     return sourceAudioTrack;
   }
+  // Initialize audio context
+  console.log("Initializing audio context");
+  const audioContext = new AudioContext({
+    sampleRate: 96000,
+    latencyHint: "interactive",
+  });
+  await audioContext.audioWorklet.addModule("/js/ms2109-quirks.js");
   // Install quirks
   console.log("Creating quirks for MS2109...");
   const quirksNode = new AudioWorkletNode(audioContext, "ms2109-quirks");
@@ -98,7 +100,7 @@ async function loadCamera(argVideoDeviceId?: string | null) {
   video.srcObject = stream;
 }
 
-async function closeCamera(){
+async function closeCamera() {
   const video = document.querySelector<HTMLVideoElement>("video")!;
   const srcObject = video.srcObject;
   video.srcObject = null;
@@ -115,9 +117,6 @@ async function queryPermission(name: string) {
 }
 
 async function main() {
-  // Initialize audio context
-  await audioContext.audioWorklet.addModule("/js/ms2109-quirks.js");
-
   const videoPermission = await queryPermission("camera");
   const audioPermission = await queryPermission("microphone");
 
@@ -185,19 +184,50 @@ function updateVolumeIcon(volume: number) {
   }
 }
 
+function initializeVideoVolume() {
+  const video = document.querySelector<HTMLVideoElement>("video")!;
+  const volume = document.querySelector<HTMLInputElement>("#volume")!;
+  const mutedValue = localStorage.getItem("muted") === "true";
+  const volumeValue = parseInt(localStorage.getItem("volume") || "0");
+  video.volume = volumeValue / 100;
+  if (mutedValue) {
+    video.muted = true;
+    volume.value = "0";
+  } else {
+    video.muted = false;
+    volume.value = volumeValue.toString();
+  }
+  updateVolumeIcon(video.muted ? 0 : video.volume);
+}
+
 function attachEvents() {
   const menu = document.querySelector<HTMLSelectElement>("#menu")!;
+  const volumeIcon = document.querySelector<HTMLElement>("#volume-icon")!;
   const volume = document.querySelector<HTMLInputElement>("#volume")!;
   const video = document.querySelector<HTMLVideoElement>("video")!;
 
+  // mute event
+  volumeIcon.addEventListener("click", () => {
+    if (video.muted) {
+      video.muted = false;
+      volume.value = localStorage.getItem("volume") || "100";
+    } else {
+      video.muted = true;
+      volume.value = "0";
+    }
+    localStorage.setItem("muted", video.muted.toString());
+    updateVolumeIcon(video.muted ? 0 : video.volume);
+  });
+
   // Syncronize volume
-  volume.value = localStorage.getItem("volume") || "100";
-  video.volume = volume.valueAsNumber / 100;
-  updateVolumeIcon(video.volume);
+  initializeVideoVolume();
+
   volume.addEventListener("input", (e) => {
     const target = e.target as HTMLInputElement;
+    video.muted = false;
     video.volume = target.valueAsNumber / 100;
     localStorage.setItem("volume", target.value);
+    localStorage.setItem("muted", "false");
     updateVolumeIcon(video.volume);
   });
 
