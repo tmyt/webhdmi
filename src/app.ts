@@ -8,8 +8,11 @@ const audioContext = new AudioContext({
 });
 
 async function requestCamera() {
-  const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-  stream.getTracks().forEach(track => track.stop())
+  const stream = await navigator.mediaDevices.getUserMedia({
+    video: true,
+    audio: true,
+  });
+  stream.getTracks().forEach((track) => track.stop());
 }
 
 async function createQuirks(audioStream: MediaStream) {
@@ -37,14 +40,21 @@ async function createQuirks(audioStream: MediaStream) {
 
 async function openCamera(videoDeviceId: string) {
   const devices = await navigator.mediaDevices.enumerateDevices();
-  const videoDevice = devices.filter(device => device.deviceId === videoDeviceId)[0];
+  const videoDevice = devices.filter(
+    (device) => device.deviceId === videoDeviceId
+  )[0];
   if (!videoDevice) return null;
-  const auidoDevice = devices.filter(device => device.kind === "audioinput" && device.groupId === videoDevice.groupId)[0];
+  const auidoDevice = devices.filter(
+    (device) =>
+      device.kind === "audioinput" && device.groupId === videoDevice.groupId
+  )[0];
   const audioVideoSource = await navigator.mediaDevices.getUserMedia({
-    audio: auidoDevice ? {
-      deviceId: { exact: auidoDevice.deviceId },
-      sampleRate: 96000,
-    } : false,
+    audio: auidoDevice
+      ? {
+          deviceId: { exact: auidoDevice.deviceId },
+          sampleRate: 96000,
+        }
+      : false,
     video: {
       deviceId: { exact: videoDeviceId },
       width: 1920,
@@ -52,10 +62,12 @@ async function openCamera(videoDeviceId: string) {
       frameRate: 60,
     },
   });
-  return new MediaStream([
-    audioVideoSource.getVideoTracks()[0],
-    await createQuirks(audioVideoSource),
-  ].filter(a => a) as MediaStreamTrack[]);
+  return new MediaStream(
+    [
+      audioVideoSource.getVideoTracks()[0],
+      await createQuirks(audioVideoSource),
+    ].filter((a) => a) as MediaStreamTrack[]
+  );
 }
 
 async function updateSelections() {
@@ -66,19 +78,39 @@ async function updateSelections() {
   videoDevices.forEach((device) => {
     videoSelect.appendChild(new Option(device.label, device.deviceId));
   });
+  if (videoDevices.length > 0) {
+    // add divider
+    const option = new Option("------");
+    option.disabled = true;
+    videoSelect.appendChild(option);
+    // add reset camera menu
+    videoSelect.appendChild(new Option("Reset Camera", "**reset**"));
+  }
   videoSelect.value =
     localStorage.getItem("videoinput") || videoDevices[0].deviceId;
 }
 
 async function loadCamera(argVideoDeviceId?: string | null) {
-  const videoDeviceId = document.querySelector<HTMLSelectElement>("#videoinput")!.value;
+  const videoDeviceId =
+    document.querySelector<HTMLSelectElement>("#videoinput")!.value;
   const stream = await openCamera(argVideoDeviceId || videoDeviceId);
   const video = document.querySelector<HTMLVideoElement>("video")!;
   video.srcObject = stream;
 }
 
+async function closeCamera(){
+  const video = document.querySelector<HTMLVideoElement>("video")!;
+  const srcObject = video.srcObject;
+  video.srcObject = null;
+  if (srcObject instanceof MediaStream) {
+    srcObject.getTracks().forEach((track) => track.stop());
+  }
+}
+
 async function queryPermission(name: string) {
-  const permission = await navigator.permissions.query({ name: name as PermissionName });
+  const permission = await navigator.permissions.query({
+    name: name as PermissionName,
+  });
   return permission.state === "granted";
 }
 
@@ -103,21 +135,25 @@ function getCapture() {
   canvas.height = 1080;
   const ctx = canvas.getContext("2d")!;
   ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-  return new Promise<Blob | null>(resolve => canvas.toBlob(resolve, "image/png"));
+  return new Promise<Blob | null>((resolve) =>
+    canvas.toBlob(resolve, "image/png")
+  );
 }
 
 async function captureScreen() {
   const blob = await getCapture();
   if (!blob) return;
   navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
-  var toastEl = document.querySelector('.toast');
-  (new bootstrap.Toast(toastEl, { delay: 1500 })).show();
+  var toastEl = document.querySelector(".toast");
+  new bootstrap.Toast(toastEl, { delay: 1500 }).show();
 }
 
 async function saveScreen() {
   const blob = await getCapture();
   if (!blob) return;
-  const file = new File([blob], `webhdmi_${Date.now()}.png`, { type: "image/png" });
+  const file = new File([blob], `webhdmi_${Date.now()}.png`, {
+    type: "image/png",
+  });
   const url = URL.createObjectURL(file);
   const a = document.createElement("a");
   a.href = url;
@@ -169,7 +205,13 @@ function attachEvents() {
   const videoSelect = document.querySelector<HTMLSelectElement>("#videoinput")!;
   videoSelect.addEventListener("change", (e) => {
     const target = e.target as HTMLSelectElement;
-    localStorage.setItem("videoinput", target.value);
+    if (target.value === "**reset**") {
+      const currentItem = localStorage.getItem("videoinput");
+      (e.target as HTMLSelectElement).value = currentItem as string;
+    } else {
+      localStorage.setItem("videoinput", target.value);
+    }
+    closeCamera();
     loadCamera();
   });
 
@@ -213,7 +255,8 @@ function attachEvents() {
 
   // Fullscreen
   document.addEventListener("fullscreenchange", () => {
-    const fullscreenIcon = document.querySelector<HTMLButtonElement>("#fullscreen-icon")!;
+    const fullscreenIcon =
+      document.querySelector<HTMLButtonElement>("#fullscreen-icon")!;
     if (document.fullscreenElement) {
       fullscreenIcon.classList.remove("ri-fullscreen-fill");
       fullscreenIcon.classList.add("ri-fullscreen-exit-fill");
