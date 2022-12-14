@@ -40,6 +40,13 @@ async function createQuirks(audioStream: MediaStream) {
   return audioDestination.stream.getAudioTracks()[0];
 }
 
+function getRequestConstraints(){
+  const requestConstraints = localStorage.getItem("requestConstraints");
+  if (!requestConstraints) return {width: 1920, height: 1080};
+  const[width, height] = requestConstraints.split("x");
+  return {width: parseInt(width), height: parseInt(height)};
+}
+
 async function openCamera(videoDeviceId: string) {
   const devices = await navigator.mediaDevices.enumerateDevices();
   const videoDevice = devices.filter(
@@ -58,9 +65,8 @@ async function openCamera(videoDeviceId: string) {
         }
       : false,
     video: {
+      ...getRequestConstraints(),
       deviceId: { exact: videoDeviceId },
-      width: 1920,
-      height: 1080,
       frameRate: 60,
     },
   });
