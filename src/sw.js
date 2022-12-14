@@ -9,6 +9,8 @@ const CACHE_ASSETS = [
   "/bootstrap/bootstrap.min.css",
   "/css/style.css",
   "/js/app.js",
+  "/js/ble.js",
+  "/js/hid.js",
   "/js/ms2109-quirks.js",
   "/js/quirks-core.mjs",
   "/remixicon/remixicon.css",

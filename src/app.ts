@@ -143,8 +143,7 @@ async function captureScreen() {
   const blob = await getCapture();
   if (!blob) return;
   navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
-  var toastEl = document.querySelector(".toast");
-  new bootstrap.Toast(toastEl, { delay: 1500 }).show();
+  showToast("#captured");
 }
 
 async function saveScreen() {
@@ -200,6 +199,21 @@ function initializeVideoVolume() {
   updateVolumeIcon(video.muted ? 0 : video.volume);
 }
 
+function attachKeyboards() {
+  document.addEventListener("keydown", processKeyDown);
+  document.addEventListener("keyup", processKeyUp);
+}
+
+function detatchKeyboards() {
+  document.removeEventListener("keydown", processKeyDown);
+  document.removeEventListener("keyup", processKeyUp);
+}
+
+function showToast(id: `#${string}`, delay = 1500) {
+  var toastEl = document.querySelector(id);
+  new bootstrap.Toast(toastEl, { delay }).show();
+}
+
 function attachEvents() {
   const menu = document.querySelector<HTMLSelectElement>("#menu")!;
   const volumeIcon = document.querySelector<HTMLElement>("#volume-icon")!;
@@ -243,6 +257,39 @@ function attachEvents() {
     }
     closeCamera();
     loadCamera();
+  });
+
+  // Connect keyboard
+  const connectKeyboard =
+    document.querySelector<HTMLElement>("#connect-keyboard");
+  const onTransmitError = () => {
+    stop();
+    detatchKeyboards();
+    connectKeyboard?.classList.remove("btn-info");
+    connectKeyboard?.classList.add("btn-secondary");
+    showToast("#ble-error", 2500);
+  };
+  const onReconnect = () => {
+    showToast("#ble-reconnect", 3000);
+  };
+  const options = {
+    onerror: onTransmitError,
+    onreconnect: onReconnect,
+  };
+  connectKeyboard?.addEventListener("click", async () => {
+    if (connectKeyboard.classList.contains("btn-info")) {
+      stop();
+      connectKeyboard.classList.remove("btn-info");
+      connectKeyboard.classList.add("btn-secondary");
+    } else {
+      if (!(await start(options))) {
+        return;
+      }
+      attachKeyboards();
+      connectKeyboard.classList.remove("btn-secondary");
+      connectKeyboard.classList.add("btn-info");
+      showToast("#ble-connected", 2500);
+    }
   });
 
   // Capture to clipboard

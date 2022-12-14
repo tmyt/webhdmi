@@ -18,6 +18,9 @@
       </div>
       <div class="d-flex">
         <select class="form-select me-2" id="videoinput"></select>
+        <button class="btn btn-secondary d-flex align-items-center me-1" id="connect-keyboard" tabindex="-1">
+          <i class="ri-keyboard-box-line ri-lg"></i>
+        </button>
         <button class="btn btn-secondary d-flex align-items-center me-1" id="capture" tabindex="-1">
           <i class="ri-screenshot-2-fill ri-lg"></i>
         </button>
@@ -27,18 +30,55 @@
       </div>
     </div>
     <video id="video" autoplay></video>
-    <div class="toast align-items-center text-white bg-secondary border-0 position-fixed end-0 bottom-0 m-3"
-      role="alert" aria-live="assertive" aria-atomic="true">
-      <div class="d-flex">
-        <div class="toast-body d-flex align-items-center">
-          <i class="ri-screenshot-2-fill ri-xl me-1"></i>
-          スクリーンショットをクリップボードへコピーしました
+    <div class="position-fixed end-0 bottom-0">
+      <div class="toast align-items-center text-white bg-danger border-0 m-3" role="alert" aria-live="assertive"
+        aria-atomic="true" id="ble-error">
+        <div class="d-flex">
+          <div class="toast-body d-flex align-items-center">
+            <i class="ri-error-warning-line ri-xl me-1"></i>
+            BLE-Bridgeとの接続でエラーが発生しました
+          </div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+            aria-label="Close"></button>
         </div>
-        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
-          aria-label="Close"></button>
+      </div>
+      <div class="toast align-items-center text-dark bg-warning border-0 m-3" role="alert" aria-live="assertive"
+        aria-atomic="true" id="ble-reconnect">
+        <div class="d-flex">
+          <div class="toast-body d-flex align-items-center">
+            <i class="ri-refresh-line ri-xl me-1 x-rotate"></i>
+            BLE-Bridgeへ再接続しています
+          </div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+            aria-label="Close"></button>
+        </div>
+      </div>
+      <div class="toast align-items-center text-white bg-success border-0 m-3" role="alert" aria-live="assertive"
+        aria-atomic="true" id="ble-connected">
+        <div class="d-flex">
+          <div class="toast-body d-flex align-items-center">
+            <i class="ri-checkbox-circle-line ri-xl me-1"></i>
+            BLE-Bridgeへ接続しました
+          </div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+            aria-label="Close"></button>
+        </div>
+      </div>
+      <div class="toast align-items-center text-white bg-secondary border-0 m-3" role="alert" aria-live="assertive"
+        aria-atomic="true" id="captured">
+        <div class="d-flex">
+          <div class="toast-body d-flex align-items-center">
+            <i class="ri-screenshot-2-fill ri-xl me-1"></i>
+            スクリーンショットをクリップボードへコピーしました
+          </div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+            aria-label="Close"></button>
+        </div>
       </div>
     </div>
   </div>
+  <script src="/js/hid.js"></script>
+  <script src="/js/ble.js"></script>
   <script type="module" src="/js/app.js"></script>
   <script type="module" src="/bootstrap/bootstrap.bundle.min.js"></script>
 </body>

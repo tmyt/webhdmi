@@ -46,3 +46,21 @@ div#menu.hide {
 i#volume-icon {
   cursor: pointer;
 }
+
+@keyframes rotate-animation {
+  0% {
+    transform: rotateZ(0deg);
+  }
+  80% {
+    transform: rotateZ(180deg);
+  }
+  100% {
+    transform: rotateZ(180deg);
+  }
+}
+
+.x-rotate:before {
+  display: block;
+  animation: rotate-animation 1s infinite;
+  line-height: normal;
+}
