@@ -60,6 +60,7 @@ async function openCamera(videoDeviceId: string) {
   const audioVideoSource = await navigator.mediaDevices.getUserMedia({
     audio: auidoDevice
       ? {
+          autoGainControl: false,
           deviceId: { exact: auidoDevice.deviceId },
           sampleRate: 96000,
         }
