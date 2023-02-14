@@ -5,6 +5,10 @@ body {
   overflow: hidden;
 }
 
+body:has(div#menu.hide) {
+  cursor: none;
+}
+
 video {
   width: 100%;
   height: 100%;
