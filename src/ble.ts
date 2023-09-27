@@ -8,7 +8,7 @@ type ConnectOptions = {
 
 let globalCharacteristic: BluetoothRemoteGATTCharacteristic | null = null;
 let globalOptions: ConnectOptions | null = null;
-let globalHeatbeatInterval: number | null = null;
+let globalHeartbeatInterval: number | null = null;
 
 function sleep(ms: number) {
   return new Promise((resolve) => {
@@ -29,17 +29,17 @@ async function start(options: ConnectOptions): Promise<boolean> {
   globalCharacteristic = characteristic;
   globalOptions = options;
   ongoing = Promise.resolve();
-  globalHeatbeatInterval = setInterval(sendHeartbeat, 2000);
+  globalHeartbeatInterval = setInterval(sendHeartbeat, 2000);
   transmit([0, 0, 0, 0, 0, 0, 0]);
   return true;
 }
 
 function stop() {
   if (!globalCharacteristic) return;
-  clearInterval(globalHeatbeatInterval!);
+  clearInterval(globalHeartbeatInterval!);
   globalCharacteristic.service.device.gatt?.disconnect();
   globalCharacteristic = null;
-  globalHeatbeatInterval = null;
+  globalHeartbeatInterval = null;
 }
 
 const pressed: Array<number> = [];
@@ -58,7 +58,7 @@ async function connect(device: BluetoothDevice) {
     console.log("connecting");
     try {
       const server = await device.gatt?.connect();
-      if (!server) throw new Error("Cound not connect to device");
+      if (!server) throw new Error("Count not connect to device");
       const service = await server.getPrimaryService(serviceUuid);
       const characteristic = await service.getCharacteristic(
         characteristicUuid

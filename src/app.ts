@@ -42,7 +42,7 @@ async function createQuirks(audioStream: MediaStream) {
 
 function getRequestConstraints() {
   const requestConstraints = localStorage.getItem("requestConstraints");
-  if (!requestConstraints) return { width: 1920, height: 1080 };
+  if (!requestConstraints) return { width: 1920, height: 1080, frameRate: { min: 30, max: 60, ideal: 60 } };
   const [width, height] = requestConstraints.split("x");
   return { width: parseInt(width), height: parseInt(height) };
 }
@@ -53,15 +53,15 @@ async function openCamera(videoDeviceId: string) {
     (device) => device.deviceId === videoDeviceId
   )[0];
   if (!videoDevice) return null;
-  const auidoDevice = devices.filter(
+  const audioDevice = devices.filter(
     (device) =>
       device.kind === "audioinput" && device.groupId === videoDevice.groupId
   )[0];
   const audioVideoSource = await navigator.mediaDevices.getUserMedia({
-    audio: auidoDevice
+    audio: audioDevice
       ? {
           autoGainControl: false,
-          deviceId: { exact: auidoDevice.deviceId },
+          deviceId: { exact: audioDevice.deviceId },
           channelCount: { ideal: 2, min: 1 },
           echoCancellation: false,
           noiseSuppression: false,
@@ -133,8 +133,8 @@ async function main() {
   if (!videoPermission || !audioPermission) {
     await requestCamera();
   }
-  updateSelections();
-  loadCamera(localStorage.getItem("videoinput"));
+  await updateSelections();
+  await loadCamera(localStorage.getItem("videoinput"));
 }
 
 function getCapture() {
@@ -152,7 +152,7 @@ function getCapture() {
 async function captureScreen() {
   const blob = await getCapture();
   if (!blob) return;
-  navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+  await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
   showToast("#captured");
 }
 
@@ -214,13 +214,13 @@ function attachKeyboards() {
   document.addEventListener("keyup", processKeyUp);
 }
 
-function detatchKeyboards() {
+function detachKeyboards() {
   document.removeEventListener("keydown", processKeyDown);
   document.removeEventListener("keyup", processKeyUp);
 }
 
 function showToast(id: `#${string}`, delay = 1500) {
-  var toastEl = document.querySelector(id);
+  const toastEl = document.querySelector(id);
   new bootstrap.Toast(toastEl, { delay }).show();
 }
 
@@ -243,7 +243,7 @@ function attachEvents() {
     updateVolumeIcon(video.muted ? 0 : video.volume);
   });
 
-  // Syncronize volume
+  // Synchronize volume
   initializeVideoVolume();
 
   volume.addEventListener("input", (e) => {
@@ -255,9 +255,9 @@ function attachEvents() {
     updateVolumeIcon(video.volume);
   });
 
-  // Syncronize video input
+  // Synchronize video input
   const videoSelect = document.querySelector<HTMLSelectElement>("#videoinput")!;
-  videoSelect.addEventListener("change", (e) => {
+  videoSelect.addEventListener("change", async (e) => {
     const target = e.target as HTMLSelectElement;
     if (target.value === "**reset**") {
       const currentItem = localStorage.getItem("videoinput");
@@ -265,8 +265,8 @@ function attachEvents() {
     } else {
       localStorage.setItem("videoinput", target.value);
     }
-    closeCamera();
-    loadCamera();
+    await closeCamera();
+    await loadCamera();
   });
 
   // Connect keyboard
@@ -274,7 +274,7 @@ function attachEvents() {
     document.querySelector<HTMLElement>("#connect-keyboard");
   const onTransmitError = () => {
     stop();
-    detatchKeyboards();
+    detachKeyboards();
     connectKeyboard?.classList.remove("btn-info");
     connectKeyboard?.classList.add("btn-secondary");
     showToast("#ble-error", 2500);
@@ -304,17 +304,17 @@ function attachEvents() {
 
   // Capture to clipboard
   const capture = document.querySelector<HTMLButtonElement>("#capture")!;
-  capture.addEventListener("click", () => {
-    captureScreen();
+  capture.addEventListener("click", async () => {
+    await captureScreen();
   });
 
   // Enter fullscreen
   const fullscreen = document.querySelector<HTMLButtonElement>("#fullscreen")!;
-  fullscreen.addEventListener("click", () => {
+  fullscreen.addEventListener("click", async () => {
     if (document.fullscreenElement) {
-      document.exitFullscreen();
+      await document.exitFullscreen();
     } else {
-      document.documentElement.requestFullscreen();
+      await document.documentElement.requestFullscreen();
     }
   });
 
@@ -329,14 +329,14 @@ function attachEvents() {
   });
 
   // Shortcut key
-  document.addEventListener("keydown", (e) => {
+  document.addEventListener("keydown", async (e) => {
     if (e.code === "KeyC" && e.altKey) {
-      captureScreen();
+      await captureScreen();
     }
   });
-  document.addEventListener("keydown", (e) => {
+  document.addEventListener("keydown", async (e) => {
     if (e.code === "KeyS" && e.altKey && e.shiftKey) {
-      saveScreen();
+      await saveScreen();
     }
   });
 
@@ -354,6 +354,6 @@ function attachEvents() {
   });
 }
 
-main();
+void main();
 attachEvents();
-navigator.serviceWorker.register("/sw.js");
+void navigator.serviceWorker.register("/sw.js");
